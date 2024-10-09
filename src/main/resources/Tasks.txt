@@ -1,0 +1,5 @@
+1. Add unit tests for DirectorySynchronizerImplV2.
+2. Remove DirectorySynchronizerImpl.
+3. Rename DirectorySynchronizerImplV2 to DirectorySynchronizerImpl.
+4. Improve the GUI: Add in-progress gif, add a toggle from play to stop button + functionality, list the source and directory folder contents.
+5. Add a README.
