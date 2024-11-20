@@ -16,9 +16,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
@@ -150,23 +150,31 @@ class DirectorySynchronizerImplV2ITest {
     @Test
     void happyPathCreateGeneralFile() throws IOException {
         waitUntilRunning(directorySynchronizerV2);
-        String newFileName = "newFile.xxx";
-        createNewFileInSourceDir(newFileName);
-        waitUntilGeneralFileCopied(newFileName);
+        String sourceFilename = "newFile.xxx";
+        String targetFilenameRegex = getFilenameRegex(sourceFilename);
+        createNewFileInSourceDir(sourceFilename);
+        waitUntilGeneralFileCopied(targetFilenameRegex);
+    }
+
+    private String getFilenameRegex(String filename) {
+        String baseName = FilenameUtils.getBaseName(filename);
+        String extension = FilenameUtils.getExtension(filename);
+        return baseName + "\\[\\d{2}:\\d{2}:\\d{2}\\]." + extension;
     }
 
     @Test
     void happyPathDeleteGeneralFile() throws IOException, InterruptedException {
-        String newFileName = "newFile.xxx";
-        createNewFileInSourceDir(newFileName);
-        createNewFileInTargetDir(newFileName);
+        String sourceFilename = "newFile.xxx";
+        String targetFilename = "newFile[11:11:11].xxx";
+        createNewFileInSourceDir(sourceFilename);
+        createNewFileInTargetDir(targetFilename);
 
         directorySynchronizerV2 = new DirectorySynchronizerImplV2(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
         directorySynchronizerV2.start();
         waitUntilRunning(directorySynchronizerV2);
 
-        deleteFileFromSourceDir(newFileName);
-        waitUntilGeneralFileDeleted(newFileName);
+        deleteFileFromSourceDir(sourceFilename);
+        waitUntilGeneralFileDeleted(targetFilename);
     }
 
     private static void renameFileInSourceDir(String newFileName, String renamedFileName) {
@@ -229,13 +237,12 @@ class DirectorySynchronizerImplV2ITest {
                 });
     }
 
-    private static void waitUntilGeneralFileCopied(String newFileName) {
-        String newFileBaseName = FilenameUtils.getBaseName(newFileName);
+    private static void waitUntilGeneralFileCopied(String filenameRegex) {
         Awaitility.await()
-                .alias("Expected :'" + newFileName + "' to be synced to: '" + TARGET_DIR_PATH + "' but it does not exist")
+                .alias("Expected :'" + filenameRegex + "' to be synced to: '" + TARGET_DIR_PATH + "' but it does not exist")
                 .atMost(5, TimeUnit.SECONDS)
                 .untilAsserted(() -> {
-                    boolean found = findFileInTargetDir(newFileBaseName);
+                    boolean found = findTargetFile(filenameRegex);
                     assertTrue(found);
                 });
     }
@@ -246,15 +253,19 @@ class DirectorySynchronizerImplV2ITest {
                 .alias("Expected :'" + newFileName + "' to be synced to: '" + TARGET_DIR_PATH + "' but it does not exist")
                 .atMost(5, TimeUnit.SECONDS)
                 .untilAsserted(() -> {
-                    boolean found = findFileInTargetDir(newFileBaseName);
+                    boolean found = findTargetFile(newFileBaseName);
                     assertFalse(found);
                 });
     }
 
-    private static boolean findFileInTargetDir(String fileBaseName) {
+    private static boolean findTargetFile(String fileNameRegex) {
+        Pattern pattern = Pattern.compile(fileNameRegex);
         File targetDir = new File(TARGET_DIR_PATH);
         File[] files = targetDir.listFiles();
-        assertNotNull(files);
-        return Arrays.stream(files).anyMatch(file -> file.getName().contains(fileBaseName));
+        if (files == null) {
+            return false;
+        }
+        return Arrays.stream(files)
+                .anyMatch(f -> pattern.matcher(f.getName()).find());
     }
 }
