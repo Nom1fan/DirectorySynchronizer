@@ -3,7 +3,6 @@ package org.dirsync.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
-import org.dirsync.controller.event.FileSystemEvent;
 import org.dirsync.exception.DirectorySyncFailedException;
 import org.dirsync.exception.DirectoryWatchFailedException;
 import org.dirsync.input.SyncDirectoriesValidator;
@@ -14,12 +13,10 @@ import org.dirsync.model.file.SyncFileFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.dirsync.controller.event.FileSystemEvent.Type.CREATED;
-import static org.dirsync.controller.event.FileSystemEvent.Type.DELETED;
 
 @Slf4j
 public class DirectorySynchronizerImplV2 implements DirectorySynchronizerV2 {
@@ -101,6 +98,8 @@ public class DirectorySynchronizerImplV2 implements DirectorySynchronizerV2 {
     public void onFileCreate(File file) {
         try {
             syncFileCreated(file.toPath());
+        } catch (FileAlreadyExistsException e) {
+            log.warn("File: {} already exists on target directory: {}", file.getName(), syncDirectoriesInfo.targetDirPath());
         } catch (IOException e) {
             stopAndFailIfMaxAttemptsReached(e);
         }
