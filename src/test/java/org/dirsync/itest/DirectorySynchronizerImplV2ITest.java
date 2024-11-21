@@ -5,8 +5,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.awaitility.Awaitility;
-import org.dirsync.controller.DirectorySynchronizerImplV2;
-import org.dirsync.controller.DirectorySynchronizerV2;
+import org.dirsync.controller.DirectorySynchronizerImpl;
+import org.dirsync.controller.DirectorySynchronizer;
 import org.dirsync.model.dir.SyncDirectoriesInfo;
 import org.dirsync.model.file.SyncFileFactoryImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,14 +28,14 @@ class DirectorySynchronizerImplV2ITest {
     private static final String TARGET_DIR_PATH = System.getProperty("java.io.tmpdir") + "targetDir";
     private static final File SOURCE_DIR = new File(SOURCE_DIR_PATH);
     private static final File TARGET_DIR = new File(TARGET_DIR_PATH);
-    private DirectorySynchronizerV2 directorySynchronizerV2;
+    private DirectorySynchronizer directorySynchronizerV2;
 
     @BeforeEach
     void beforeEach() throws IOException, InterruptedException {
         resetDirs();
         FileAlterationMonitor fileAlterationMonitor = createFileAlterationMonitor();
         SyncDirectoriesInfo syncDirectoriesInfo = createSyncDirectoriesInfo();
-        directorySynchronizerV2 = new DirectorySynchronizerImplV2(syncDirectoriesInfo, fileAlterationMonitor, new SyncFileFactoryImpl());
+        directorySynchronizerV2 = new DirectorySynchronizerImpl(syncDirectoriesInfo, fileAlterationMonitor, new SyncFileFactoryImpl());
         directorySynchronizerV2.start();
     }
 
@@ -87,7 +87,7 @@ class DirectorySynchronizerImplV2ITest {
         createNewFileInSourceDir(newFileName);
         createNewFileInTargetDir(newFileName);
 
-        directorySynchronizerV2 = new DirectorySynchronizerImplV2(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
+        directorySynchronizerV2 = new DirectorySynchronizerImpl(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
         directorySynchronizerV2.start();
         waitUntilRunning(directorySynchronizerV2);
 
@@ -101,7 +101,7 @@ class DirectorySynchronizerImplV2ITest {
         createNewFileInSourceDirSubFolder("subfolder", newFileName);
         createNewFileInTargetDir(newFileName);
 
-        directorySynchronizerV2 = new DirectorySynchronizerImplV2(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
+        directorySynchronizerV2 = new DirectorySynchronizerImpl(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
         directorySynchronizerV2.start();
         waitUntilRunning(directorySynchronizerV2);
 
@@ -116,7 +116,7 @@ class DirectorySynchronizerImplV2ITest {
         createNewFileInSourceDirSubFolder("subfolder1/subfolder2", newFileName);
         createNewFileInTargetDir(newFileName);
 
-        directorySynchronizerV2 = new DirectorySynchronizerImplV2(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
+        directorySynchronizerV2 = new DirectorySynchronizerImpl(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
         directorySynchronizerV2.start();
         waitUntilRunning(directorySynchronizerV2);
 
@@ -169,7 +169,7 @@ class DirectorySynchronizerImplV2ITest {
         createNewFileInSourceDir(sourceFilename);
         createNewFileInTargetDir(targetFilename);
 
-        directorySynchronizerV2 = new DirectorySynchronizerImplV2(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
+        directorySynchronizerV2 = new DirectorySynchronizerImpl(createSyncDirectoriesInfo(), createFileAlterationMonitor(), new SyncFileFactoryImpl());
         directorySynchronizerV2.start();
         waitUntilRunning(directorySynchronizerV2);
 
@@ -210,7 +210,7 @@ class DirectorySynchronizerImplV2ITest {
         assertTrue(new File(TARGET_DIR_PATH + "/" + newFileName).createNewFile());
     }
 
-    private void waitUntilRunning(DirectorySynchronizerV2 directorySynchronizerV2) {
+    private void waitUntilRunning(DirectorySynchronizer directorySynchronizerV2) {
         Awaitility.await()
                 .alias("Expected DirectorySynchronizerV2 to be running but it is not")
                 .atMost(5, TimeUnit.SECONDS)

@@ -2,8 +2,8 @@ package org.dirsync;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
-import org.dirsync.controller.DirectorySynchronizerImplV2;
-import org.dirsync.controller.DirectorySynchronizerV2;
+import org.dirsync.controller.DirectorySynchronizerImpl;
+import org.dirsync.controller.DirectorySynchronizer;
 import org.dirsync.model.dir.SyncDirectoriesInfo;
 import org.dirsync.model.file.SyncFileFactoryImpl;
 import org.dirsync.view.ConsoleView;
@@ -18,7 +18,7 @@ public class Main {
             System.exit(0);
         }
         FileAlterationMonitor fileAlterationMonitor = createFileAlterationMonitor();
-        DirectorySynchronizerV2 directorySynchronizer =
+        DirectorySynchronizer directorySynchronizer =
                 createDirectorySynchronizer(syncDirectoriesInfo, fileAlterationMonitor);
         try {
             directorySynchronizer.start();
@@ -33,10 +33,10 @@ public class Main {
         }
     }
 
-    private static DirectorySynchronizerV2 createDirectorySynchronizer(SyncDirectoriesInfo syncDirectoriesInfo,
-                                                                       FileAlterationMonitor fileAlterationMonitor) {
+    private static DirectorySynchronizer createDirectorySynchronizer(SyncDirectoriesInfo syncDirectoriesInfo,
+                                                                     FileAlterationMonitor fileAlterationMonitor) {
         SyncFileFactoryImpl syncFileFactory = new SyncFileFactoryImpl();
-        return new DirectorySynchronizerImplV2(syncDirectoriesInfo, fileAlterationMonitor, syncFileFactory);
+        return new DirectorySynchronizerImpl(syncDirectoriesInfo, fileAlterationMonitor, syncFileFactory);
     }
 
     private static FileAlterationMonitor createFileAlterationMonitor() {
